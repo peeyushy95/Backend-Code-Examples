@@ -1,15 +1,21 @@
 package com.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
 @Entity(name = "billionaires")
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Billionaire {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Integer id;
 
     @Column(name = "first_name")

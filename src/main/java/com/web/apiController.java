@@ -22,17 +22,13 @@ public class apiController {
     @Autowired
     BillionairesRepository billionairesRepository;
 
-//    Logger logger = LoggerFactory.getLogger(apiController.class);
-
     @GetMapping("/health")
     public ResponseEntity<String> health(){
 
         log.info("Health");
 
         List<Billionaire> b = billionairesRepository.findAll();
-        b.forEach(x->{
-            System.out.println(x);
-        });
+        b.forEach(x-> System.out.println(x));
         return new ResponseEntity<>("Its working", HttpStatus.OK);
     }
 
