@@ -12,28 +12,28 @@ import org.springframework.context.annotation.Bean;
 @Slf4j
 public class AllInOneApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(AllInOneApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(AllInOneApplication.class, args);
+    }
 
-	@Bean
-	public CommandLineRunner demo(BillionairesRepository repository) {
-		return (args) -> {
-			Billionaire billionaire = Billionaire.builder().
-					career("dance")
-					.firstName("firstName")
-					.lastName("lastName")
-					.build();
+    @Bean
+    public CommandLineRunner demo(BillionairesRepository repository) {
+        return (args) -> {
+            Billionaire billionaire = Billionaire.builder().
+                    career("dance")
+                    .firstName("firstName")
+                    .lastName("lastName")
+                    .build();
 
-			repository.save(billionaire);
+            repository.save(billionaire);
 
-			// fetch all billionaires
-			log.info("billionaires found with findAll():");
-			log.info("-------------------------------");
-			for (Billionaire b : repository.findAll()) {
-				log.info(b.toString());
-			}
-		};
-	}
+            // fetch all billionaires
+            log.info("billionaires found with findAll():");
+            log.info("-------------------------------");
+            for (Billionaire b : repository.findAll()) {
+                log.info(b.toString());
+            }
+        };
+    }
 
 }
