@@ -5,6 +5,7 @@ Demo:
 - Spring Boot
 - Spring JPA/Hibernate
 - Spring Boot Actuator
+- Spring Rest Template
 - Spring Command line Runner
 - H2 Setup
 - Lombok

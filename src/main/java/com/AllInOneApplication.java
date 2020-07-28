@@ -19,6 +19,7 @@ public class AllInOneApplication {
     @Bean
     public CommandLineRunner demo(BillionairesRepository repository) {
         return (args) -> {
+
             Billionaire billionaire = Billionaire.builder().
                     career("dance")
                     .firstName("firstName")
