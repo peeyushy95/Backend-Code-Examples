@@ -1,17 +1,17 @@
 package com.stocks.web;
 
 import com.stocks.dto.StockQuote;
+import com.stocks.model.MarketTrend;
+import com.stocks.model.StockDetail;
 import com.stocks.web.manager.IStockManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 
 @RestController
 @RequestMapping("/stocks")
@@ -29,5 +29,21 @@ public class StockService {
     @GetMapping("/")
     public ResponseEntity<HashMap<String, String>> getStockCodes() throws Exception {
         return new ResponseEntity<>(stockManager.getStockCodes(), HttpStatus.OK);
+    }
+
+//    @CrossOrigin(origins = "http://localhost:3000")
+    @GetMapping("/bull")
+    public ResponseEntity<List<StockDetail>> getBull() {
+        return new ResponseEntity<>(stockManager.getDailyStockData(), HttpStatus.OK);
+    }
+
+    @GetMapping("/trend")
+    public ResponseEntity<List<MarketTrend>> getTrend() {
+        return new ResponseEntity<>(stockManager.getTrend(), HttpStatus.OK);
+    }
+
+    @PostMapping("/process")
+    public void processRecords() throws Exception{
+        stockManager.processDailyStockData();
     }
 }

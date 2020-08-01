@@ -3,11 +3,17 @@ package com.stocks.web.manager;
 import com.commons.webClient.BlockingRestClient;
 import com.commons.webClient.RequestDetails;
 import com.stocks.dto.StockQuote;
+import com.stocks.model.MarketTrend;
+import com.stocks.model.StockDetail;
+import com.stocks.repository.MarketTrendRepository;
+import com.stocks.repository.StockDetailRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
@@ -16,54 +22,89 @@ import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
-import static com.stocks.constants.NseUrls.getQuoteURL;
-import static com.stocks.constants.NseUrls.stocksCSVURL;
+import static com.stocks.constants.NseUrls.*;
 
 @Service
+@Slf4j
 public class StockManager implements IStockManager {
-    private HashMap<String, String> stockCodes = null;
-    private List<String> indexList = null;
+
+    @Autowired
+    private StockDetailRepository stockDetailRepository;
+
+    @Autowired
+    private MarketTrendRepository marketTrendRepository;
+
+    @Autowired
+    private StockBrain stockBrain;
+
+    private final HashMap<String, String> stockCodes = new HashMap<>();
 
     public HashMap<String, String> getStockCodes() throws Exception {
-        if (this.stockCodes != null) {
-            return this.stockCodes;
-        } else {
-            String responseBody = new BlockingRestClient<String, String>().execute(
-                    RequestDetails.builder()
-                            .url(stocksCSVURL)
-                            .requestType(HttpMethod.GET)
-                            .build(), " ", String.class);
+        final String responseBody = new BlockingRestClient<String, String>().execute(
+                RequestDetails.builder()
+                        .url(stocksCSVURL)
+                        .requestType(HttpMethod.GET)
+                        .build(), " ", String.class);
 
-            this.stockCodes = new HashMap<String, String>();
-            BufferedReader rd = new BufferedReader(new StringReader(responseBody));
-            String line = rd.readLine();
-            while ((line = rd.readLine()) != null) {
-                this.stockCodes.put(line.split(",")[0], line.split(",")[1]);
-            }
-            return this.stockCodes;
+        final BufferedReader rd = new BufferedReader(new StringReader(responseBody));
+        String line = rd.readLine();
+        while ((line = rd.readLine()) != null) {
+            stockCodes.put(line.split(",")[0], line.split(",")[1]);
+        }
+        return this.stockCodes;
+    }
+
+    @Override
+    public void processDailyStockData() throws Exception {
+        Integer totalCount = 0;
+        AtomicReference<Integer> bullCount = new AtomicReference<>(0);
+        final DecimalFormat dec = new DecimalFormat("#0.00");
+        for (final Map.Entry<String, String> e : getStockCodes().entrySet()) {
+            Optional<StockDetail> stock = stockBrain.processStockHistory(e.getKey());
+            totalCount++;
+            stock.ifPresent(stockDetail -> {
+                stockDetailRepository.save(stockDetail);
+                if(stockDetail.getFlag() == 5)
+                bullCount.getAndSet(bullCount.get() + 1);
+            });
+            final MarketTrend trend = MarketTrend.builder()
+                    .ratio(Double.parseDouble(dec.format(bullCount.get().doubleValue()/totalCount.doubleValue())))
+                    .date(LocalDate.now().toString())
+                    .build();
+
+            marketTrendRepository.save(trend);
         }
     }
 
     @Override
-    public StockQuote getQuote(String symbol) throws Exception {
+    public List<MarketTrend> getTrend(){
+        return marketTrendRepository.findAll();
+    }
 
-        String responseBody = new BlockingRestClient<String, String>().execute(
+    @Override
+    public List<StockDetail> getDailyStockData() {
+        return stockDetailRepository.findAll();
+    }
+
+    @Override
+    public StockQuote getQuote(String symbol) throws Exception {
+        final String responseBody = new BlockingRestClient<String, String>().execute(
                 RequestDetails.builder()
                         .url(buildURLForQuote(symbol.toUpperCase(), 0, 0, 0))
                         .requestType(HttpMethod.GET)
                         .build(), " ", String.class);
-            Element content = Jsoup.parse(responseBody).getElementById("responseDiv");
-            JSONObject jsonResponse = (JSONObject) new JSONParser().parse(content.text());
-            JSONArray dataArray = (JSONArray) jsonResponse.get("data");
-            JSONObject data = (JSONObject) dataArray.get(0);
-            StockQuote s = this.prepareStockQuote(data);
-            return s;
+        final Element content = Jsoup.parse(responseBody).getElementById("responseDiv");
+        final JSONObject jsonResponse = (JSONObject) new JSONParser().parse(content.text());
+        final JSONArray dataArray = (JSONArray) jsonResponse.get("data");
+        final JSONObject data = (JSONObject) dataArray.get(0);
+        return prepareStockQuote(data);
     }
 
     private String buildURLForQuote(String quote, Integer illiquidValue, Integer smeFlag, Integer itpFlag) {
@@ -71,9 +112,9 @@ public class StockManager implements IStockManager {
     }
 
     private StockQuote prepareStockQuote(JSONObject data) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException, ParseException {
-        StockQuote stockQuote = new StockQuote();
-        for (Iterator iterator = data.keySet().iterator(); iterator.hasNext(); ) {
-            String key = (String) iterator.next();
+        final StockQuote stockQuote = new StockQuote();
+        for (Object o : data.keySet()) {
+            String key = (String) o;
             if (data.get(key).equals("-")) {
                 this.setFieldInObject(stockQuote, key, null);
             } else if (key.equalsIgnoreCase("priceBand") && data.get(key).toString().equalsIgnoreCase("No Band")) {
@@ -109,8 +150,9 @@ public class StockManager implements IStockManager {
         return stockQuote;
     }
 
-    private void setFieldInObject(Object object, String fieldName, Object value) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
-        Field f = object.getClass().getDeclaredField(fieldName);
+    private void setFieldInObject(Object object, String fieldName, Object value)
+            throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
+        final Field f = object.getClass().getDeclaredField(fieldName);
         f.setAccessible(true);
         f.set(object, value);
     }

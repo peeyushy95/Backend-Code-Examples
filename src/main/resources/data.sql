@@ -1,13 +1,22 @@
-DROP TABLE IF EXISTS billionaires;
-
-CREATE TABLE billionaires (
-  id INT AUTO_INCREMENT  PRIMARY KEY,
-  first_name VARCHAR(250) NOT NULL,
-  last_name VARCHAR(250) NOT NULL,
-  career VARCHAR(250) DEFAULT NULL
-);
-
+--DROP TABLE IF EXISTS billionaires;
+--DROP TABLE IF EXISTS stock_performance;
+--CREATE TABLE billionaires (
+--  id INT AUTO_INCREMENT  PRIMARY KEY,
+--  first_name VARCHAR(250) NOT NULL,
+--  last_name VARCHAR(250) NOT NULL,
+--  career VARCHAR(250) DEFAULT NULL
+--);
+--
 INSERT INTO billionaires (first_name, last_name, career) VALUES
-  ('Peeyush', 'Yadav', 'Billionaire Investor'),
-  ('Bill', 'Gates', 'Billionaire Tech Entrepreneur'),
-  ('Folrunsho', 'Alakija', 'Billionaire Oil Magnate');
+  ('Peeyush', 'Yadav', 'Billionaire Investor');
+--
+--
+--CREATE TABLE stock_performance(
+--   symbol VARCHAR(250) PRIMARY KEY,
+--   price VARCHAR(250) ,
+--   ema_today VARCHAR(250),
+--   ema_yesterday VARCHAR(250),
+--   volume VARCHAR(250),
+--   delivery VARCHAR(250),
+--   field INT DEFAULT 5
+--)

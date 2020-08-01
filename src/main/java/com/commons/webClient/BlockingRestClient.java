@@ -18,40 +18,34 @@ import java.io.IOException;
 @Service
 public class BlockingRestClient<T, V> {
 
-    CloseableHttpClient httpClient = HttpClientBuilder
-            .create()
-            .build();
-    HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
+    private final CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+    private final HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
+    private final RestTemplate restTemplate = new RestTemplate(factory);
 
-    private RestTemplate restTemplate = new RestTemplate(factory);
-
-    private ResponseErrorHandler responseHandler = new ResponseErrorHandler() {
-
+    private final ResponseErrorHandler responseHandler = new ResponseErrorHandler() {
         @Override
         public boolean hasError(ClientHttpResponse response) throws IOException {
-
             if (response.getStatusCode() != HttpStatus.OK) {
                 System.out.println(response.getStatusText());
             }
-            return response.getStatusCode() == HttpStatus.OK ? false : true;
+            return response.getStatusCode() != HttpStatus.OK;
         }
 
         @Override
-        public void handleError(ClientHttpResponse response) throws IOException {
-            // TODO Auto-generated method stub
-
-        }
+        public void handleError(ClientHttpResponse response) throws IOException {}
     };
 
-    public V execute(RequestDetails requestDetails, T data, Class<V> genericClass) throws ResourceAccessException, Exception {
+    public V execute(RequestDetails requestDetails, T data, Class<V> genericClass) throws ResourceAccessException {
 
         restTemplate.setErrorHandler(responseHandler);
-        HttpHeaders headers = new HttpHeaders();
+        final HttpHeaders headers = new HttpHeaders();
         headers.set("User-Agent", "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36");
         headers.set("X-Requested-With", "XMLHttpRequest");
+        headers.set("Host", "www1.nseindia.com");
+        headers.set("Referer","https://www1.nseindia.com/products/content/equities/equities/eq_security.htm");
 
-        HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<V> response = restTemplate.exchange(requestDetails.getUrl(), requestDetails.getRequestType(),
+        final HttpEntity entity = new HttpEntity(headers);
+        final ResponseEntity<V> response = restTemplate.exchange(requestDetails.getUrl(), requestDetails.getRequestType(),
                 entity, genericClass);
 
         return response.getBody();
