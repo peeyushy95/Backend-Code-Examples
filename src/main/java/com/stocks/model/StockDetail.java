@@ -32,6 +32,6 @@ public class StockDetail {
     private Integer flag;
 
     @Column(name = "updated_at")
-    private LocalDate updateDate;
+    private String updateDate;
 
 }

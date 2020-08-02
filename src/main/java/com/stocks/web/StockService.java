@@ -1,5 +1,6 @@
 package com.stocks.web;
 
+import com.stocks.dto.StockHistoryQuote;
 import com.stocks.dto.StockQuote;
 import com.stocks.model.MarketTrend;
 import com.stocks.model.StockDetail;
@@ -22,7 +23,12 @@ public class StockService {
     private IStockManager stockManager;
 
     @GetMapping("/details/{symbol}")
-    public ResponseEntity<StockQuote> getIndex(@PathVariable final String symbol) throws Exception {
+    public ResponseEntity<List<StockHistoryQuote>> getIndex(@PathVariable final String symbol) throws Exception {
+        return new ResponseEntity<>(stockManager.getStockHistory(symbol), HttpStatus.OK);
+    }
+
+    @GetMapping("/daily/{symbol}")
+    public ResponseEntity<StockQuote> getStockDailyData(@PathVariable final String symbol) throws Exception {
         return new ResponseEntity<>(stockManager.getQuote(symbol), HttpStatus.OK);
     }
 

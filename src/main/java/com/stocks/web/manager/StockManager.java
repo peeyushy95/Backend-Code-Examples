@@ -2,6 +2,7 @@ package com.stocks.web.manager;
 
 import com.commons.webClient.BlockingRestClient;
 import com.commons.webClient.RequestDetails;
+import com.stocks.dto.StockHistoryQuote;
 import com.stocks.dto.StockQuote;
 import com.stocks.model.MarketTrend;
 import com.stocks.model.StockDetail;
@@ -59,6 +60,11 @@ public class StockManager implements IStockManager {
             stockCodes.put(line.split(",")[0], line.split(",")[1]);
         }
         return this.stockCodes;
+    }
+
+    @Override
+    public List<StockHistoryQuote> getStockHistory(final String symbol){
+        return stockBrain.getStockHistory(symbol);
     }
 
     @Override
