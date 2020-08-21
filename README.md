@@ -3,6 +3,7 @@ Demo:
 
 - Spring Batch
 - Spring Boot
+- Spring Mail
 - Spring JPA/Hibernate
 - Spring Boot Actuator
 - Spring Rest Template

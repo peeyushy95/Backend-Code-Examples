@@ -9,14 +9,3 @@
 --
 INSERT INTO billionaires (first_name, last_name, career) VALUES
   ('Peeyush', 'Yadav', 'Billionaire Investor');
---
---
---CREATE TABLE stock_performance(
---   symbol VARCHAR(250) PRIMARY KEY,
---   price VARCHAR(250) ,
---   ema_today VARCHAR(250),
---   ema_yesterday VARCHAR(250),
---   volume VARCHAR(250),
---   delivery VARCHAR(250),
---   field INT DEFAULT 5
---)
